@@ -67,7 +67,7 @@ Let us assume your MLP has 30 neurons in first layer, 20 in second layer and the
 
 Now, use the trained MLP to predict on the Fashion-MNIST dataset. What do you observe? How do the embeddings (t-SNE viz for the second layer compare for MNIST and Fashion-MNIST images) [3 marks]
 
-
+## Submission Guidelines
 Submission Format: Share a GitHub repo with your training notebooks named “question<number>.ipynb”.  Include textual answers in the notebook itself. For Question 1, put the link to streamlit app at the top of the notebook.
 
 
