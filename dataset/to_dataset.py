@@ -26,7 +26,7 @@ def tokenize_code(data):
         
     return tokens
 
-with open ("refined_data.txt", "r") as file:
+with open ("dataset/refined_data.txt", "r", encoding='utf-8') as file:
     data = re.split('----------', file.read())
 
     # generate tokens
@@ -42,31 +42,21 @@ with open ("refined_data.txt", "r") as file:
     for i in range(len(make_unique)):
         token_to_id[make_unique[i]] = i
     # token_to_id[''] = 0
-    with open("tokens.csv", "w") as file:
-        writer = csv.writer(file)
-        for key, value in token_to_id.items():
-            writer.writerow([key, value])
+    # with open("dataset/tokens.csv", "w") as file:
+    #     writer = csv.writer(file)
+    #     for key, value in token_to_id.items():
+    #         writer.writerow([key, value])
     # print(len(token_to_id))
     # print(token_to_id['.'])
 
-    # # write to csv, in block of 5 context length
-    # with open("dataset.csv", "w") as file:
-    #     writer = csv.writer(file)
-    #     for line in data:
-    #         tokens = tokenize_code(line)
-    #         block = [0] * (5 + 1) # 5 context length
-    #         for i in range(len(tokens)):
-    #             # print(tokens[i])
-    #             block = block[1:] + [token_to_id[tokens[i]]]
-    #             writer.writerow(block)
-    
+    # write to csv, in block of 5 context length
+    with open("D:/IIT Gandhinagar/Sem 3/ML/dataset_20.csv", "w") as file:
+        writer = csv.writer(file)
+        for line in data:
+            tokens = tokenize_code(line)
+            block = [0] * (20 + 1) # context length = 20
+            for i in range(len(tokens)):
+                # print(tokens[i])
+                block = block[1:] + [token_to_id[tokens[i]]]
+                writer.writerow(block)
 
-# import csv
-
-# # opening the csv file and reading its data in an array
-
-# with open('dataset.csv', 'r') as file:
-#     reader = csv.reader(file)
-#     data = []
-#     for row in reader:
-#         data.append(row)
