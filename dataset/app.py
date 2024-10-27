@@ -1,21 +1,96 @@
 import streamlit as st
+import torch
+import torch.nn as nn
+import csv
+import re
 
-# Mock functions simulating your models
-def load_model1():
-    return lambda text: f"Model 1 response to '{text}'"
+# Model definition
+class NextChar(nn.Module):
+    def __init__(self, block_size, vocab_size, emb_dim, hidden_size, activation):
+        super().__init__()
+        self.emb = nn.Embedding(vocab_size, emb_dim)
+        self.lin1 = nn.Linear(block_size * emb_dim, hidden_size)
+        self.lin2 = nn.Linear(hidden_size, 512)
+        self.lin3 = nn.Linear(512, 256)
+        self.lin4 = nn.Linear(256, vocab_size)
+        self.activation = torch.relu if activation == "relu" else torch.tanh
 
-def load_model2():
-    return lambda text: f"Model 2 response to '{text}'"
+    def forward(self, x):
+        x = self.emb(x)
+        x = x.view(x.shape[0], -1)
+        x = self.activation(self.lin1(x))
+        x = self.activation(self.lin2(x))
+        x = self.activation(self.lin3(x))
+        x = self.lin4(x)
+        return x
 
-def load_model3():
-    return lambda text: f"Model 3 response to '{text}'"
+# Token mappings
+def load_tokens(file_path):
+    stoi = {}
+    itos = {}
+    
+    with open(file_path, 'r', encoding='utf-8') as file:
+        reader = csv.reader(file)
+        for row in reader:
+            token_id = int(row[1])  # Convert ID to integer
+            token = row[0]           # Token remains as a string
+            stoi[token] = token_id    # Map token to ID
+            itos[token_id] = token     # Map ID to token
 
-# Load models into a dictionary for easy selection
+    return stoi, itos
+
+# Load token mappings
+stoi, itos = load_tokens('D:/IIT Gandhinagar/Sem 3/ML/ES335_Assignment_3/dataset/tokens_holmes.csv')
+
+# Function to load models from .pt files with CPU mapping
+def load_model(block_size, vocab_size, emb_dim, hidden_size, activation, model_path):
+    model = NextChar(block_size, vocab_size, emb_dim, hidden_size, activation)
+    model.load_state_dict(torch.load(model_path, map_location=torch.device('cpu')))  # Load the state dict
+    model.eval()  # Set the model to evaluation mode
+    return model
+
+# Load your actual models from .pt files
 models = {
-    "Model 1": load_model1(),
-    "Model 2": load_model2(),
-    "Model 3": load_model3(),
+    "Model 1": load_model(5, len(itos), 64, 1024, "relu", "holmes_5_64_relu.pt"),
+    "Model 2": load_model(5, len(itos), 64, 1024, "tanh", "holmes_5_64_tanh.pt"),
+    "Model 3": load_model(5, len(itos), 128, 1024, "tanh", "holmes_5_128_tanh.pt"),
+    "Model 4": load_model(10, len(itos), 64, 1024, "relu", "holmes_10_64_relu.pt"),
+    "Model 5": load_model(10, len(itos), 64, 1024, "tanh", "holmes_10_64_tanh.pt"),
+    "Model 6": load_model(10, len(itos), 128, 1024, "relu", "holmes_10_128_relu.pt"),
+    # "Model 7": load_model(10, len(itos), 128, 1024, "tanh", "holmes_10_128_tanh.pt"),
+    "Model 8": load_model(15, len(itos), 64, 1024, "relu", "holmes_15_64_relu.pt"),
 }
+
+# Function to tokenize user input
+def tokenize_code(data):
+    pattern = r"(\b\w+\b|\d+|[^\w\s]|\s+)"
+    tokens = re.findall(pattern, data)
+    return tokens
+
+# Function to generate text from the selected model
+def generate_text(prompt, model, itos, stoi, block_size, max_len=10):
+    context = [0] * block_size
+    generated_text = prompt
+
+    for ch in tokenize_code(prompt):
+        if ch not in stoi:
+            context = context[1:] + [1]  # Assume 1 is the token for unknown characters
+            continue
+        ix = stoi[ch]
+        context = context[1:] + [ix]
+
+    for i in range(max_len):
+        x = torch.tensor(context).view(1, -1)
+        with torch.no_grad():  # Disable gradient calculation
+            y_pred = model(x)
+        ix = torch.distributions.categorical.Categorical(logits=y_pred).sample().item()
+        ch = itos[ix]
+        if ch == '' and generated_text != '':
+            break
+        generated_text += ch
+        context = context[1:] + [ix]
+    
+    return generated_text
 
 # Initialize session state to store chat history
 if "messages" not in st.session_state:
@@ -28,7 +103,7 @@ with st.sidebar:
     selected_model = models[selected_model_name]
 
 # Main chat interface
-st.title("Enter a message")
+st.title("Chat-like Text Generation App")
 
 # Display chat history
 for message in st.session_state.messages:
@@ -42,20 +117,22 @@ for message in st.session_state.messages:
 user_input = st.text_input("Your message:", key="user_input")
 
 # Handle message submission
-if st.button("Send"):
+if st.button("Generate Response"):  
     if user_input:
         # Store the user's message
         st.session_state.messages.append(("user", user_input))
         
         # Generate response using the selected model
-        response = selected_model(user_input)
-        st.session_state.messages.append((selected_model_name, response))
+        response = generate_text(user_input, selected_model, itos, stoi, 5, 25)  # Use the selected model
+        st.session_state.messages.append((selected_model_name, str(response)))  # Append the generated response
 
         # Clear the input field
-        st.session_state.user_input = ""
+        # st.session_state.user_input = ""
 
-        # Rerun the app to display updated chat
-        st.experimental_rerun()
+        # # Rerun the app to display updated chat
+        # st.experimental_rerun()
+        st.write(response)
     else:
         st.warning("Please enter a message.")
+
 
