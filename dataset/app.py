@@ -1,7 +1,6 @@
 import streamlit as st
 
-# Assume you have three models already trained and available
-# Replace these with your actual model loading logic
+# Mock functions simulating your models
 def load_model1():
     return lambda text: f"Model 1 response to '{text}'"
 
@@ -11,31 +10,52 @@ def load_model2():
 def load_model3():
     return lambda text: f"Model 3 response to '{text}'"
 
-# Load models into a dictionary for easy access
+# Load models into a dictionary for easy selection
 models = {
     "Model 1": load_model1(),
     "Model 2": load_model2(),
     "Model 3": load_model3(),
 }
 
-# Title of the app
-st.title("Text Generation using Multiple Models")
+# Initialize session state to store chat history
+if "messages" not in st.session_state:
+    st.session_state.messages = []
 
-# Take user input
-user_input = st.text_input("Enter your text:")
+# Sidebar for model selection
+with st.sidebar:
+    st.title("Choose Your Model")
+    selected_model_name = st.selectbox("Select a model:", models.keys())
+    selected_model = models[selected_model_name]
 
-# Model selection dropdown
-model_name = st.selectbox("Select a model to generate text:", models.keys())
+# Main chat interface
+st.title("Enter a message")
 
-# Button to generate text
-if st.button("Generate Text"):
-    if user_input:
-        # Get the selected model and generate text
-        selected_model = models[model_name]
-        generated_text = selected_model(user_input)
-        
-        # Display the generated text
-        st.write(f"**Generated Text:** {generated_text}")
+# Display chat history
+for message in st.session_state.messages:
+    role, content = message
+    if role == "user":
+        st.markdown(f"**You:** {content}")
     else:
-        st.warning("Please enter some text before generating.")
+        st.markdown(f"**{selected_model_name}:** {content}")
+
+# Input field for user message
+user_input = st.text_input("Your message:", key="user_input")
+
+# Handle message submission
+if st.button("Send"):
+    if user_input:
+        # Store the user's message
+        st.session_state.messages.append(("user", user_input))
+        
+        # Generate response using the selected model
+        response = selected_model(user_input)
+        st.session_state.messages.append((selected_model_name, response))
+
+        # Clear the input field
+        st.session_state.user_input = ""
+
+        # Rerun the app to display updated chat
+        st.experimental_rerun()
+    else:
+        st.warning("Please enter a message.")
 
