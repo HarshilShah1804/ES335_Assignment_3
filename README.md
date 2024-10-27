@@ -1,8 +1,8 @@
 # ES335_Assignment3
 ## Question 1
-Refer to the notebook on generating names using next-character prediction and modify it for generating text using next-word prediction (You have to implement MLP based text generator. However, it is recommended to refer to Andrej Karpathy’s blog post on the Effectiveness of RNNs).
+Refer to the [notebook](https://nipunbatra.github.io/ml-teaching/notebooks/names.html) on generating names using next-character prediction and modify it for generating text using next-word prediction (You have to implement MLP based text generator. However, it is recommended to refer to Andrej Karpathy’s blog post on the [Effectiveness of RNNs](http://karpathy.github.io/2015/05/21/rnn-effectiveness/)).
 
-Visualize the embeddings using t-SNE if using more than 2 dimensions or using a scatter plot if using 2 dimensions and write your observations. Write a streamlit application that asks users for an input text, and it then predicts the next k words or lines. In the streamlit app, you should have controls for modifying context length, embedding dimension, activation function, random seed, etc. You can use any one of the datasets mentioned below.
+Visualize the embeddings using t-SNE if using more than 2 dimensions or using a scatter plot if using 2 dimensions and write your observations. Write a [streamlit](https://streamlit.io/) application that asks users for an input text, and it then predicts the next k words or lines. In the streamlit app, you should have controls for modifying context length, embedding dimension, activation function, random seed, etc. You can use any one of the datasets mentioned below.
 	
 ### Hints:
 
@@ -36,12 +36,12 @@ i. Use Google Colab or Kaggle for training (use maximum 500-1000 epochs). Start 
 
 ## Datasets:
 - Paul Graham essays
-- Wikipedia (English)
-- Shakespeare
-- Leo Tolstoy's War and Peace
-- The Adventures of Sherlock Holmes, by Arthur Conan Doyle
-- Maths texbook
-- Python or C++ code (Linux Kernel Code)
+- [Wikipedia](http://prize.hutter1.net/) (English)
+- [Shakespeare](https://cs.stanford.edu/people/karpathy/char-rnn/shakespeare_input.txt)
+- [Leo Tolstoy's War and Peace](https://cs.stanford.edu/people/karpathy/char-rnn/warpeace_input.txt)
+- [The Adventures of Sherlock Holmes, by Arthur Conan Doyle](https://www.gutenberg.org/files/1661/1661-0.txt)
+- [Maths texbook](https://github.com/stacks/stacks-project)
+- Python or C++ code ([Linux Kernel Code](https://cs.stanford.edu/people/karpathy/char-rnn/linux_input.txt))
 - IITGN advisory generation
 - IITGN website generation
 - Generate sklearn docs 
