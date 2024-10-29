@@ -54,16 +54,18 @@ def load_model(block_size, vocab_size, emb_dim, hidden_size, activation, model_p
 
 # Load your actual models from .pt files
 models = {
-    # "holmes_5_64_relu": load_model(5, len(itos), 64, 1024, "relu", "holmes_5_64_relu.pt"),
-    # "holmes_5_64_tanh": load_model(5, len(itos), 64, 1024, "tanh", "holmes_5_64_tanh.pt"),
-    # "holmes_5_128_tanh": load_model(5, len(itos), 128, 1024, "tanh", "holmes_5_128_tanh.pt"),
-    # "holmes_10_64_relu": load_model(10, len(itos), 64, 1024, "relu", "holmes_10_64_relu.pt"),
-    # "holmes_10_64_tanh": load_model(10, len(itos), 64, 1024, "tanh", "holmes_10_64_tanh.pt"),
-    # "holmes_10_128_relu": load_model(10, len(itos), 128, 1024, "relu", "holmes_10_128_relu.pt"),
-    # # "holmes_10_128_tanh": load_model(10, len(itos), 128, 1024, "tanh", "holmes_10_128_tanh.pt"),
-    # "holmes_15_64_relu": load_model(15, len(itos), 64, 1024, "relu", "holmes_15_64_relu.pt"),
-    # "holmes_15_64_tanh": load_model(15, len(itos), 64, 1024, "tanh", "holmes_15_64_tanh.pt"),
-    # "holmes_15_128_relu": load_model(15, len(itos), 128, 1024, "relu", "holmes_15_128_relu.pt"),
+    (5,64,"relu"): load_model(5, len(itos), 64, 1024, "relu", "holmes_5_64_relu.pt"),
+    (5,64,"tanh"): load_model(5, len(itos), 64, 1024, "tanh", "holmes_5_64_tanh.pt"),
+    (5,128,"relu"):load_model(5, len(itos), 128, 1024, "relu", "holmes_5_128_relu.pt"),
+    (5,128,"tanh"): load_model(5, len(itos), 128, 1024, "tanh", "holmes_5_128_tanh.pt"),
+    (10,64,"relu"): load_model(10, len(itos), 64, 1024, "relu", "holmes_10_64_relu.pt"),
+    (10,64,"tanh"): load_model(10, len(itos), 64, 1024, "tanh", "holmes_10_64_tanh.pt"),
+    (10,128,"relu"): load_model(10, len(itos), 128, 1024, "relu", "holmes_10_128_relu.pt"),
+    (10,128,"tanh"): load_model(10, len(itos), 128, 1024, "tanh", "holmes_10_128_tanh.pt"),
+    (15,64,"relu"): load_model(15, len(itos), 64, 1024, "relu", "holmes_15_64_relu.pt"),
+    (15,64,"tanh"): load_model(15, len(itos), 64, 1024, "tanh", "holmes_15_64_tanh.pt"),
+    (15,128,"relu"): load_model(15, len(itos), 128, 1024, "relu", "holmes_15_128_relu.pt"),
+    (15,128,"tanh"): load_model(15, len(itos), 128, 1024, "tanh", "holmes_15_128_tanh.pt")
 }
 
 # Function to tokenize user input
@@ -72,8 +74,9 @@ def tokenize_code(data):
     tokens = re.findall(pattern, data)
     return tokens
 
+block_size_array = [5, 5, 5, 10, 10, 10, 15, 15, 15] 
 # Function to generate text from the selected model
-def generate_text(prompt, model, itos, stoi, block_size, max_len=10):
+def generate_text(prompt, model, itos, stoi, block_size, max_len):
     context = [0] * block_size
     generated_text = prompt
 
@@ -103,26 +106,26 @@ if "messages" not in st.session_state:
 
 # Sidebar for model selection
 with st.sidebar:
-    st.title("Choose Model Parameters")
-    
-    # Slider for block size
-    block_size = st.slider("Block Size", min_value=5, max_value=15, value=5, step=5)
-    
-    # Slider for embedding dimension
-    emb_dim = st.slider("Embedding Dimension", min_value=64, max_value=128, value=64, step=64)
-    
-    # Dropdown for activation function
-    activation = st.selectbox("Activation Function", ["relu", "tanh"])
-
-    # Load the model based on selected parameters
-    model_name = f"holmes_{block_size}_{emb_dim}_{activation}"
-    
-    # Check if the model has been loaded before
-    if model_name not in models:    
-        models[model_name] = load_model(block_size, len(itos), emb_dim, 1024, activation, f"{model_name}.pt")
+    # st.title("Choose Your Model")
+    # selected_model_name = st.selectbox("Select a model:", models.keys())
+    # selected_model = models[selected_model_name]
+    st.slider("Context Length", 5, 15, 5, 5, key="context_length")
+    st.slider("Embedding Dimension", 64, 128, 64, 64, key="embedding_dim")
+    st.radio("Activation Function", ["relu", "tanh"], key="activation")
+    st.slider("Output Size", 25, 200, 25, 5, key="output_size")
+    context_length = st.session_state.context_length
+    embedding_dim = st.session_state.embedding_dim
+    activation = st.session_state.activation
+    output_size = st.session_state.output_size
+    model_params = (context_length, embedding_dim, activation)
+    selected_model = models[model_params]
+    # st.title("History")
+    # if st.button("Show History"):
+    #     for entry in st.session_state.history:
+    #         st.write(entry)
 
 # Main chat interface
-st.title("Text Generation App")
+st.title("Chat-like Text Generation App")
 
 # # Display chat history
 # for message in st.session_state.messages:
@@ -141,11 +144,19 @@ if st.button("Generate Response"):
         # Store the user's message
         st.session_state.messages.append(("user", user_input))
         
-        # Use the block size directly from the slider
-        response = generate_text(user_input, models[model_name], itos, stoi, block_size, 25)  # Use the selected model
-        st.session_state.messages.append((model_name, str(response)))  # Append the generated response
+        # Determine the block_size based on the selected model
+        
+        block_size = context_length
+        
+        # Generate response using the selected model
+        response = generate_text(user_input, selected_model, itos, stoi, block_size, output_size)  # Use the selected model
+        st.session_state.messages.append(("Model", str(response)))  # Append the generated response
 
-        # Display the response
+        # Clear the input field
+        # st.session_state.user_input = ""
+
+        # # Rerun the app to display updated chat
+        # st.experimental_rerun()
         st.write(response)
     else:
         st.warning("Please enter a message.")
