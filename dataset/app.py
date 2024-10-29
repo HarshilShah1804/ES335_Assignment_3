@@ -51,14 +51,16 @@ def load_model(block_size, vocab_size, emb_dim, hidden_size, activation, model_p
 
 # Load your actual models from .pt files
 models = {
-    "Model 1": load_model(5, len(itos), 64, 1024, "relu", "holmes_5_64_relu.pt"),
-    "Model 2": load_model(5, len(itos), 64, 1024, "tanh", "holmes_5_64_tanh.pt"),
-    "Model 3": load_model(5, len(itos), 128, 1024, "tanh", "holmes_5_128_tanh.pt"),
-    "Model 4": load_model(10, len(itos), 64, 1024, "relu", "holmes_10_64_relu.pt"),
-    "Model 5": load_model(10, len(itos), 64, 1024, "tanh", "holmes_10_64_tanh.pt"),
-    "Model 6": load_model(10, len(itos), 128, 1024, "relu", "holmes_10_128_relu.pt"),
-    # "Model 7": load_model(10, len(itos), 128, 1024, "tanh", "holmes_10_128_tanh.pt"),
-    "Model 8": load_model(15, len(itos), 64, 1024, "relu", "holmes_15_64_relu.pt"),
+    "holmes_5_64_relu": load_model(5, len(itos), 64, 1024, "relu", "holmes_5_64_relu.pt"),
+    "holmes_5_64_tanh": load_model(5, len(itos), 64, 1024, "tanh", "holmes_5_64_tanh.pt"),
+    "holmes_5_128_tanh": load_model(5, len(itos), 128, 1024, "tanh", "holmes_5_128_tanh.pt"),
+    "holmes_10_64_relu": load_model(10, len(itos), 64, 1024, "relu", "holmes_10_64_relu.pt"),
+    "holmes_10_64_tanh": load_model(10, len(itos), 64, 1024, "tanh", "holmes_10_64_tanh.pt"),
+    "holmes_10_128_relu": load_model(10, len(itos), 128, 1024, "relu", "holmes_10_128_relu.pt"),
+    # "holmes_10_128_tanh": load_model(10, len(itos), 128, 1024, "tanh", "holmes_10_128_tanh.pt"),
+    "holmes_15_64_relu": load_model(15, len(itos), 64, 1024, "relu", "holmes_15_64_relu.pt"),
+    "holmes_15_64_tanh": load_model(15, len(itos), 64, 1024, "tanh", "holmes_15_64_tanh.pt"),
+    "holmes_15_128_relu": load_model(15, len(itos), 128, 1024, "relu", "holmes_15_128_relu.pt"),
 }
 
 # Function to tokenize user input
@@ -67,6 +69,7 @@ def tokenize_code(data):
     tokens = re.findall(pattern, data)
     return tokens
 
+block_size_array = [5, 5, 5, 10, 10, 10, 15, 15, 15] 
 # Function to generate text from the selected model
 def generate_text(prompt, model, itos, stoi, block_size, max_len=10):
     context = [0] * block_size
@@ -101,17 +104,22 @@ with st.sidebar:
     st.title("Choose Your Model")
     selected_model_name = st.selectbox("Select a model:", models.keys())
     selected_model = models[selected_model_name]
+    
+    # st.title("History")
+    # if st.button("Show History"):
+    #     for entry in st.session_state.history:
+    #         st.write(entry)
 
 # Main chat interface
 st.title("Chat-like Text Generation App")
 
-# Display chat history
-for message in st.session_state.messages:
-    role, content = message
-    if role == "user":
-        st.markdown(f"**You:** {content}")
-    else:
-        st.markdown(f"**{selected_model_name}:** {content}")
+# # Display chat history
+# for message in st.session_state.messages:
+#     role, content = message
+#     if role == "user":
+#         st.markdown(f"**You:** {content}")
+#     else:
+#         st.markdown(f"**{selected_model_name}:** {content}")
 
 # Input field for user message
 user_input = st.text_input("Your message:", key="user_input")
@@ -122,8 +130,12 @@ if st.button("Generate Response"):
         # Store the user's message
         st.session_state.messages.append(("user", user_input))
         
+        # Determine the block_size based on the selected model
+        block_size_index = list(models.keys()).index(selected_model_name)
+        block_size = block_size_array[block_size_index]
+        
         # Generate response using the selected model
-        response = generate_text(user_input, selected_model, itos, stoi, 5, 25)  # Use the selected model
+        response = generate_text(user_input, selected_model, itos, stoi, block_size, 25)  # Use the selected model
         st.session_state.messages.append((selected_model_name, str(response)))  # Append the generated response
 
         # Clear the input field
