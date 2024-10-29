@@ -3,6 +3,7 @@ import torch
 import torch.nn as nn
 import csv
 import re
+import os
 
 # Model definition
 class NextChar(nn.Module):
@@ -40,10 +41,12 @@ def load_tokens(file_path):
     return stoi, itos
 
 # Load token mappings
-stoi, itos = load_tokens('D:/IIT Gandhinagar/Sem 3/ML/ES335_Assignment_3/dataset/tokens_holmes.csv')
+path = 'dataset'
+stoi, itos = load_tokens(os.path.join(path, 'tokens_holmes.csv'))
 
 # Function to load models from .pt files with CPU mapping
 def load_model(block_size, vocab_size, emb_dim, hidden_size, activation, model_path):
+    model_path = os.path.join(path, model_path)
     model = NextChar(block_size, vocab_size, emb_dim, hidden_size, activation)
     model.load_state_dict(torch.load(model_path, map_location=torch.device('cpu')))  # Load the state dict
     model.eval()  # Set the model to evaluation mode
